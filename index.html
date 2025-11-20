@@ -356,9 +356,13 @@
 
             const handleSubmit = (e) => {
                 e.preventDefault();
-                if (!files.length || !uploaderName) return;
-                if (!currentUser.displayName) localStorage.setItem('family_app_username', uploaderName);
-                onUpload({ files, caption, uploaderName });
+                if (!files.length) return;
+                
+                // Fallback for uploader name if user clears it or it's empty
+                const finalUploaderName = uploaderName || currentUser?.displayName || 'Family Member';
+                
+                if (!currentUser.displayName) localStorage.setItem('family_app_username', finalUploaderName);
+                onUpload({ files, caption, uploaderName: finalUploaderName });
                 setFiles([]); setPreviews([]); setCaption(''); onClose();
             };
 
@@ -462,22 +466,42 @@
                     const list = snap.docs.map(d => ({ id: d.id, ...d.data() })).sort((a, b) => (b.timestamp?.toMillis() || 0) - (a.timestamp?.toMillis() || 0));
                     setPhotos(list);
                     setLoading(false);
+                }, (error) => {
+                    console.error("Snapshot Error:", error);
+                    if (error.code === 'permission-denied') {
+                        alert("Database Error: Permission Denied. Please make sure your Firestore Rules allow reads/writes.");
+                    } else if (error.code === 'not-found') {
+                        // This usually doesn't trigger on snapshot for collections, but just in case
+                        console.log("Collection not found - waiting for creation.");
+                    }
                 });
                 return () => unsub();
             }, [user]);
 
             const handleUpload = async (data) => {
                 try {
+                    // EXTRA SAFETY: Ensure uploader is never undefined
+                    const safeUploader = data.uploader || (user && user.displayName) || "Family Member";
+                    
                     await Promise.all(data.files.map(async f => {
                         const b64 = await compressImage(f);
                         await addDoc(collection(db, 'artifacts', appId, 'public', 'data', 'family_photos'), {
-                            image: b64, caption: data.caption, uploader: data.uploader, likes: 0, timestamp: serverTimestamp(), userId: user.uid
+                            image: b64, 
+                            caption: data.caption || '', 
+                            uploader: safeUploader, 
+                            likes: 0, 
+                            timestamp: serverTimestamp(), 
+                            userId: user.uid
                         });
                     }));
                 } catch (e) { 
                     // Better Error Reporting
-                    console.error(e);
-                    alert("Upload failed: " + e.message); 
+                    console.error("Upload Error:", e);
+                    if (e.code === 'not-found' || e.message.includes('found') || e.code === 'failed-precondition') {
+                        alert("Database Missing! \n\nYou deleted the Firestore Database. \n\nYOU MUST GO TO FIREBASE CONSOLE -> BUILD -> FIRESTORE DATABASE -> CLICK 'CREATE DATABASE'. \n\nThe code cannot do this for you.");
+                    } else {
+                        alert("Upload failed: " + e.message); 
+                    }
                 }
             };
 
