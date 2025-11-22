@@ -7,6 +7,10 @@ import { auth } from './firebase';
 import MainLayout from './layouts/MainLayout';
 import PhotosPage from './pages/PhotosPage';
 import UploadModal from './components/UploadModal';
+import ExplorePage from './pages/ExplorePage';
+import SharingPage from './pages/SharingPage';
+import LibraryPage from './pages/LibraryPage';
+import TrashPage from './pages/TrashPage';
 
 function App() {
     const [user, setUser] = useState(null);
@@ -46,12 +50,20 @@ function App() {
                     element: <PhotosPage user={user} />,
                 },
                 {
-                    path: "search",
-                    element: <div className="p-10 text-center text-gray-500">Search coming soon</div>,
+                    path: "explore",
+                    element: <ExplorePage />,
+                },
+                {
+                    path: "sharing",
+                    element: <SharingPage />,
                 },
                 {
                     path: "library",
-                    element: <div className="p-10 text-center text-gray-500">Library coming soon</div>,
+                    element: <LibraryPage />,
+                },
+                {
+                    path: "trash",
+                    element: <TrashPage user={user} />,
                 },
                 {
                     path: "*",

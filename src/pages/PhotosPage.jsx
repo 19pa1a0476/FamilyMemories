@@ -1,10 +1,9 @@
 import React, { useState, useEffect, useMemo } from 'react';
-import { collection, onSnapshot } from 'firebase/firestore';
+import { collection, onSnapshot, doc, updateDoc, deleteDoc } from 'firebase/firestore';
 import { db, appId } from '../firebase';
 import PhotoGrid from '../components/PhotoGrid';
 import ImageViewer from '../components/ImageViewer';
 import SelectionToolbar from '../components/SelectionToolbar';
-import { deleteDoc, doc } from 'firebase/firestore';
 
 const PhotosPage = ({ user }) => {
     const [photos, setPhotos] = useState([]);
@@ -17,6 +16,7 @@ const PhotosPage = ({ user }) => {
         const unsubData = onSnapshot(collection(db, 'artifacts', appId, 'public', 'data', 'family_photos'),
             (snap) => {
                 const list = snap.docs.map(d => ({ id: d.id, ...d.data() }))
+                    .filter(p => !p.isTrashed) // Filter out trashed photos
                     .sort((a, b) => (b.timestamp?.toMillis() || 0) - (a.timestamp?.toMillis() || 0));
                 setPhotos(list);
                 setLoading(false);
@@ -50,7 +50,7 @@ const PhotosPage = ({ user }) => {
         if (!confirm(`Move ${selectedIds.size} photo(s) to trash?`)) return;
         try {
             await Promise.all([...selectedIds].map(id =>
-                deleteDoc(doc(db, 'artifacts', appId, 'public', 'data', 'family_photos', id))
+                updateDoc(doc(db, 'artifacts', appId, 'public', 'data', 'family_photos', id), { isTrashed: true })
             ));
             setSelectedIds(new Set());
         } catch (e) {
@@ -131,7 +131,7 @@ const PhotosPage = ({ user }) => {
                     hasNext={photos.findIndex(p => p.id === viewingPhoto.id) < photos.length - 1}
                     hasPrev={photos.findIndex(p => p.id === viewingPhoto.id) > 0}
                     onDelete={async (id) => {
-                        await deleteDoc(doc(db, 'artifacts', appId, 'public', 'data', 'family_photos', id));
+                        await updateDoc(doc(db, 'artifacts', appId, 'public', 'data', 'family_photos', id), { isTrashed: true });
                         setViewingPhoto(null);
                     }}
                 />
@@ -141,4 +141,3 @@ const PhotosPage = ({ user }) => {
 };
 
 export default PhotosPage;
-
