@@ -8,7 +8,8 @@ const ImageViewer = ({ photo, currentUser, onClose, onNext, onPrev, hasNext, has
     const [showInfo, setShowInfo] = useState(false);
     const isOwner = currentUser && photo.userId === currentUser.uid;
 
-    // 1. ANDROID BACK BUTTON HANDLING
+    // 1. ANDROID BACK BUTTON HANDLING (Disabled to fix blinking issue)
+    /*
     useEffect(() => {
         window.history.pushState({ modal: true }, '', window.location.href);
         const handlePopState = () => onClose();
@@ -18,6 +19,7 @@ const ImageViewer = ({ photo, currentUser, onClose, onNext, onPrev, hasNext, has
             if (window.history.state?.modal) window.history.back();
         };
     }, []);
+    */
 
     // 2. KEYBOARD NAVIGATION
     useEffect(() => {

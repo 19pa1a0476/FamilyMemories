@@ -4,12 +4,18 @@ import { db, appId } from '../firebase';
 import PhotoGrid from '../components/PhotoGrid';
 import ImageViewer from '../components/ImageViewer';
 import SelectionToolbar from '../components/SelectionToolbar';
+import Memories from '../components/Memories';
+
+import { useOutletContext } from 'react-router-dom';
 
 const PhotosPage = ({ user }) => {
     const [photos, setPhotos] = useState([]);
     const [loading, setLoading] = useState(true);
     const [selectedIds, setSelectedIds] = useState(new Set());
     const [viewingPhoto, setViewingPhoto] = useState(null);
+
+    // Get search query from MainLayout
+    const { searchQuery } = useOutletContext() || { searchQuery: '' };
 
     useEffect(() => {
         if (!user) return;
@@ -25,15 +31,28 @@ const PhotosPage = ({ user }) => {
         return () => unsubData();
     }, [user]);
 
+    const filteredPhotos = useMemo(() => {
+        if (!searchQuery) return photos;
+        const lowerQuery = searchQuery.toLowerCase();
+        return photos.filter(p => {
+            const dateStr = p.timestamp ? new Date(p.timestamp.toMillis()).toLocaleDateString() : '';
+            return (
+                (p.caption && p.caption.toLowerCase().includes(lowerQuery)) ||
+                (p.uploader && p.uploader.toLowerCase().includes(lowerQuery)) ||
+                dateStr.includes(lowerQuery)
+            );
+        });
+    }, [photos, searchQuery]);
+
     const groupedPhotos = useMemo(() => {
         const g = {};
-        photos.forEach(p => {
+        filteredPhotos.forEach(p => {
             const date = p.timestamp ? new Date(p.timestamp.toMillis()).toLocaleDateString(undefined, { weekday: 'short', year: 'numeric', month: 'short', day: 'numeric' }) : 'Recent';
             if (!g[date]) g[date] = [];
             g[date].push(p);
         });
         return g;
-    }, [photos]);
+    }, [filteredPhotos]);
 
     const toggleSelection = (id) => {
         const newSet = new Set(selectedIds);
@@ -105,6 +124,7 @@ const PhotosPage = ({ user }) => {
             )}
 
             <div className={selectedIds.size > 0 ? 'mt-16' : ''}>
+                <Memories photos={photos} />
                 <PhotoGrid
                     groupedPhotos={groupedPhotos}
                     selectedIds={selectedIds}

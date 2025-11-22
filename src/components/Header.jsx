@@ -3,7 +3,7 @@ import { Search, Upload, HelpCircle, Settings, Menu, LogOut, User } from 'lucide
 import { signOut } from 'firebase/auth';
 import { auth } from '../firebase';
 
-const Header = ({ onMenuClick, user, onUploadClick, toggleTheme }) => {
+const Header = ({ onMenuClick, user, onUploadClick, toggleTheme, onSearch, searchQuery }) => {
     const [showProfileMenu, setShowProfileMenu] = useState(false);
     const menuRef = useRef(null);
 
@@ -28,6 +28,7 @@ const Header = ({ onMenuClick, user, onUploadClick, toggleTheme }) => {
 
     return (
         <header className="fixed top-0 left-0 right-0 h-16 bg-white dark:bg-google-bgDark z-50 flex items-center px-4 justify-between border-b border-transparent dark:border-gray-800">
+            {/* ... (Logo section) */}
             <div className="flex items-center gap-4 w-64">
                 <button onClick={onMenuClick} className="md:hidden p-2 text-gray-600 dark:text-gray-300">
                     <Menu size={24} />
@@ -45,6 +46,8 @@ const Header = ({ onMenuClick, user, onUploadClick, toggleTheme }) => {
                     </div>
                     <input
                         type="text"
+                        value={searchQuery}
+                        onChange={(e) => onSearch(e.target.value)}
                         placeholder="Search your photos"
                         className="block w-full pl-10 pr-3 py-3 border-none rounded-lg bg-gray-100 dark:bg-gray-800 text-gray-900 dark:text-white placeholder-gray-500 focus:outline-none focus:ring-0 focus:bg-white dark:focus:bg-gray-700 shadow-sm transition-colors"
                     />
