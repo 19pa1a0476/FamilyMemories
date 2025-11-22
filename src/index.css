@@ -1,0 +1,17 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+body {
+    @apply bg-white dark:bg-google-bgDark text-gray-900 dark:text-white transition-colors duration-300;
+    overscroll-behavior-y: none;
+}
+
+/* Hide scrollbar */
+.no-scrollbar::-webkit-scrollbar {
+    display: none;
+}
+.no-scrollbar {
+    -ms-overflow-style: none;
+    scrollbar-width: none;
+}
